@@ -9,5 +9,13 @@ package com.mycompany.model;
  * @author Fabrizio
  */
 public class Productos {
+    private int id;
+    private String nombre;
+    private String descripcion;
+    private String imagen;
+    private double precio;
+    private Categorias categoria;
+    
+    
     
 }
