@@ -1,13 +1,22 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package com.mycompany.model;
 
-/**
- *
- * @author Fabrizio
- */
+
 public class DetalleCarrito {
+    private int id;
+    private Carrito carrito;
+    private Productos producto;
+    private int cantidad;
+    private double precioUnitario;
+
+    public DetalleCarrito(Carrito carrito, Productos producto, int cantidad, double precioUnitario) {
+        this.carrito = carrito;
+        this.producto = producto;
+        this.cantidad = cantidad;
+        this.precioUnitario = precioUnitario;
+    }
+    
+    
+    
     
 }
