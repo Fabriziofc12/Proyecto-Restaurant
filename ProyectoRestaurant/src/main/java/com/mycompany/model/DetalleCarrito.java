@@ -4,11 +4,11 @@ package com.mycompany.model;
 public class DetalleCarrito {
     private int id;
     private Carrito carrito;
-    private Productos producto;
+    private Producto producto;
     private int cantidad;
     private double precioUnitario;
 
-    public DetalleCarrito(Carrito carrito, Productos producto, int cantidad, double precioUnitario) {
+    public DetalleCarrito(Carrito carrito, Producto producto, int cantidad, double precioUnitario) {
         this.carrito = carrito;
         this.producto = producto;
         this.cantidad = cantidad;
@@ -47,14 +47,14 @@ public class DetalleCarrito {
     /**
      * @return the producto
      */
-    public Productos getProducto() {
+    public Producto getProducto() {
         return producto;
     }
 
     /**
      * @param producto the producto to set
      */
-    public void setProducto(Productos producto) {
+    public void setProducto(Producto producto) {
         this.producto = producto;
     }
 

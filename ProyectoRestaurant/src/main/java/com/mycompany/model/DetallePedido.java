@@ -11,11 +11,11 @@ package com.mycompany.model;
 public class DetallePedido {
     private int id;
     private Pedidos pedido;
-    private Productos producto;
+    private Producto producto;
     private int cantidad;
     private double precioUnitario;
 
-    public DetallePedido(Pedidos pedido, Productos producto, int cantidad, double precioUnitario) {
+    public DetallePedido(Pedidos pedido, Producto producto, int cantidad, double precioUnitario) {
         this.pedido = pedido;
         this.producto = producto;
         this.cantidad = cantidad;
@@ -53,14 +53,14 @@ public class DetallePedido {
     /**
      * @return the producto
      */
-    public Productos getProducto() {
+    public Producto getProducto() {
         return producto;
     }
 
     /**
      * @param producto the producto to set
      */
-    public void setProducto(Productos producto) {
+    public void setProducto(Producto producto) {
         this.producto = producto;
     }
 
