@@ -1,8 +1,11 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.mycompany.DAO;
 
 import com.mycompany.config.Conexion;
 import com.mycompany.model.Categoria;
-import com.mycompany.model.Producto;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,6 +13,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ *
+ * @author Fabrizio
+ */
 public class CategoriaDAO {
     public List<Categoria> listar(){
         String sql = "SELECT * FROM categorias";
