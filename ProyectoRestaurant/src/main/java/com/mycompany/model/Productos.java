@@ -1,69 +1,51 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.model;
 
-/**
- *
- * @author Fabrizio
- */
 public class Productos {
     private int id;
     private String nombre;
     private String descripcion;
     private String imagen;
     private double precio;
-    private Categorias categoria;
+    private Categoria categoria; 
 
-    public int getId() {
-        return id;
-    }
+    public Productos() { }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public void setDescripcion(String descripcion) {
+    public Productos(String nombre, String descripcion, 
+                     String imagen, double precio, 
+                     Categoria categoria) { 
+        this.nombre      = nombre;
         this.descripcion = descripcion;
+        this.imagen      = imagen;
+        this.precio      = precio;
+        this.categoria   = categoria;
     }
 
-    public String getImagen() {
-        return imagen;
+    public Productos(int id, String nombre, String descripcion,
+                     String imagen, double precio,
+                     Categoria categoria) {  
+        this.id          = id;
+        this.nombre      = nombre;
+        this.descripcion = descripcion;
+        this.imagen      = imagen;
+        this.precio      = precio;
+        this.categoria   = categoria;
     }
 
-    public void setImagen(String imagen) {
-        this.imagen = imagen;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public double getPrecio() {
-        return precio;
-    }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
 
-    public void setPrecio(double precio) {
-        this.precio = precio;
-    }
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 
-    public Categorias getCategoria() {
-        return categoria;
-    }
+    public String getImagen() { return imagen; }
+    public void setImagen(String imagen) { this.imagen = imagen; }
 
-    public void setCategoria(Categorias categoria) {
-        this.categoria = categoria;
-    }
-    
-    
-    
+    public double getPrecio() { return precio; }
+    public void setPrecio(double precio) { this.precio = precio; }
+
+    public Categoria getCategoria() { return categoria; } 
+    public void setCategoria(Categoria categoria) { this.categoria = categoria; } 
 }

@@ -10,10 +10,10 @@ package com.mycompany.model;
  */
 public class Roles {
     private int id;
-    private String trol;
+    private String rol;
 
     public Roles(String trol) {
-        this.trol = trol;
+        this.rol = trol;
     }
 
     public int getId() {
@@ -25,11 +25,11 @@ public class Roles {
     }
 
     public String getTrol() {
-        return trol;
+        return rol;
     }
 
     public void setTrol(String trol) {
-        this.trol = trol;
+        this.rol = trol;
     }
     
     

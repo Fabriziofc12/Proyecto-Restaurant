@@ -1,40 +1,38 @@
 package com.mycompany.DAO.impl;
 
-import com.mycompany.config.Conexion;
 import com.mycompany.DAO.CarritoDAO;
-import com.mycompany.DAO.EstadoCarritoDAO;
-import com.mycompany.DAO.UsuariosDAO;
 import com.mycompany.model.Carrito;
-import com.mycompany.model.EstadoCarrito;
 import com.mycompany.model.Usuarios;
-
+import com.mycompany.model.EstadoCarrito;
+import com.mycompany.config.Conexion;
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CarritoDAOImpl implements CarritoDAO {
 
-    private final UsuariosDAO usuariosDAO = new UsuariosDAOImpl();
-    private final EstadoCarritoDAO estadoCarritoDAO = new EstadoCarritoDAOImpl();
-
     @Override
     public int insertar(Carrito carrito) {
+        int resultado = 0;
         String sql = "INSERT INTO carrito (id_usuario, id_estado, fecha_creacion) VALUES (?, ?, ?)";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, carrito.getUsuario().getId());
             ps.setInt(2, carrito.getEstado().getId());
             ps.setTimestamp(3, Timestamp.valueOf(carrito.getFechaCreacion()));
-            return ps.executeUpdate();
+            resultado = ps.executeUpdate();
         } catch (SQLException e) {
+            System.err.println("Error al insertar carrito: " + e.getMessage());
             e.printStackTrace();
-            return 0;
         }
+        return resultado;
     }
 
     @Override
     public int actualizar(Carrito carrito) {
+        int resultado = 0;
         String sql = "UPDATE carrito SET id_usuario=?, id_estado=?, fecha_creacion=? WHERE id_carrito=?";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -42,82 +40,95 @@ public class CarritoDAOImpl implements CarritoDAO {
             ps.setInt(2, carrito.getEstado().getId());
             ps.setTimestamp(3, Timestamp.valueOf(carrito.getFechaCreacion()));
             ps.setInt(4, carrito.getId());
-            return ps.executeUpdate();
+            resultado = ps.executeUpdate();
         } catch (SQLException e) {
+            System.err.println("Error al actualizar carrito: " + e.getMessage());
             e.printStackTrace();
-            return 0;
         }
+        return resultado;
     }
 
     @Override
     public int eliminar(int id) {
+        int resultado = 0;
         String sql = "DELETE FROM carrito WHERE id_carrito=?";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
-            return ps.executeUpdate();
+            resultado = ps.executeUpdate();
         } catch (SQLException e) {
+            System.err.println("Error al eliminar carrito: " + e.getMessage());
             e.printStackTrace();
-            return 0;
         }
+        return resultado;
     }
 
     @Override
     public Carrito obtenerPorId(int id) {
-        String sql = "SELECT c.*, u.nombre, u.correo, u.telefono, u.contrasenia, u.id_rol, " +
-                     "e.estado as estado_nombre " +
+        Carrito carrito = null;
+        String sql = "SELECT c.*, u.nombre as usuario_nombre, u.correo, ec.estado " +
                      "FROM carrito c " +
-                     "JOIN usuarios u ON c.id_usuario = u.id_usuario " +
-                     "JOIN estado_carrito e ON c.id_estado = e.id_estado_carrito " +
+                     "LEFT JOIN usuarios u ON c.id_usuario = u.id_usuario " +
+                     "LEFT JOIN estado_carrito ec ON c.id_estado = ec.id_estado_carrito " +
                      "WHERE c.id_carrito=?";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                Usuarios usuario = new Usuarios(
-                    rs.getString("nombre"),
-                    rs.getString("correo"),
-                    rs.getString("telefono"),
-                    rs.getString("contrasenia"),
-                    null // Rol simplificado, se puede cargar completo si se necesita
-                );
-                usuario.setId(rs.getInt("id_usuario"));
-                
-                EstadoCarrito estado = new EstadoCarrito(rs.getString("estado_nombre"));
-                estado.setId(rs.getInt("id_estado"));
-                
-                Carrito carrito = new Carrito(usuario, estado, rs.getTimestamp("fecha_creacion").toLocalDateTime());
-                carrito.setId(rs.getInt("id_carrito"));
-                return carrito;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Usuarios usuario = new Usuarios(
+                        rs.getString("usuario_nombre"),
+                        rs.getString("correo"),
+                        null, 
+                        null,
+                        null  
+                    );
+                    usuario.setId(rs.getInt("id_usuario"));
+                    
+                    EstadoCarrito estado = new EstadoCarrito(rs.getString("estado"));
+                    estado.setId(rs.getInt("id_estado"));
+                    
+                    carrito = new Carrito(usuario, estado, 
+                        rs.getTimestamp("fecha_creacion").toLocalDateTime());
+                    carrito.setId(rs.getInt("id_carrito"));
+                }
             }
         } catch (SQLException e) {
+            System.err.println("Error al obtener carrito: " + e.getMessage());
             e.printStackTrace();
         }
-        return null;
+        return carrito;
     }
 
     @Override
     public List<Carrito> listarTodos() {
         List<Carrito> lista = new ArrayList<>();
-        String sql = "SELECT c.*, e.estado as estado_nombre FROM carrito c " +
-                     "JOIN estado_carrito e ON c.id_estado = e.id_estado_carrito";
+        String sql = "SELECT c.*, u.nombre as usuario_nombre, u.correo, ec.estado " +
+                     "FROM carrito c " +
+                     "LEFT JOIN usuarios u ON c.id_usuario = u.id_usuario " +
+                     "LEFT JOIN estado_carrito ec ON c.id_estado = ec.id_estado_carrito " +
+                     "ORDER BY c.id_carrito";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                // Para listar todos, cargamos usuario simplificado
-                Usuarios usuario = new Usuarios(null, null, null, null, null);
+                Usuarios usuario = new Usuarios(
+                    rs.getString("usuario_nombre"),
+                    rs.getString("correo"),
+                    null, null, null
+                );
                 usuario.setId(rs.getInt("id_usuario"));
                 
-                EstadoCarrito estado = new EstadoCarrito(rs.getString("estado_nombre"));
+                EstadoCarrito estado = new EstadoCarrito(rs.getString("estado"));
                 estado.setId(rs.getInt("id_estado"));
                 
-                Carrito carrito = new Carrito(usuario, estado, rs.getTimestamp("fecha_creacion").toLocalDateTime());
+                Carrito carrito = new Carrito(usuario, estado, 
+                    rs.getTimestamp("fecha_creacion").toLocalDateTime());
                 carrito.setId(rs.getInt("id_carrito"));
                 lista.add(carrito);
             }
         } catch (SQLException e) {
+            System.err.println("Error al listar carritos: " + e.getMessage());
             e.printStackTrace();
         }
         return lista;
@@ -125,28 +136,72 @@ public class CarritoDAOImpl implements CarritoDAO {
 
     @Override
     public Carrito obtenerCarritoActivoPorUsuario(int idUsuario) {
-        String sql = "SELECT c.*, e.estado as estado_nombre FROM carrito c " +
-                     "JOIN estado_carrito e ON c.id_estado = e.id_estado_carrito " +
-                     "WHERE c.id_usuario=? AND e.estado='ACTIVO'";
+        Carrito carrito = null;
+        String sql = "SELECT c.*, u.nombre as usuario_nombre, u.correo, ec.estado " +
+                     "FROM carrito c " +
+                     "LEFT JOIN usuarios u ON c.id_usuario = u.id_usuario " +
+                     "LEFT JOIN estado_carrito ec ON c.id_estado = ec.id_estado_carrito " +
+                     "WHERE c.id_usuario=? AND ec.estado='ACTIVO'";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idUsuario);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                Usuarios usuario = new Usuarios(null, null, null, null, null);
-                usuario.setId(rs.getInt("id_usuario"));
-                
-                EstadoCarrito estado = new EstadoCarrito(rs.getString("estado_nombre"));
-                estado.setId(rs.getInt("id_estado"));
-                
-                Carrito carrito = new Carrito(usuario, estado, rs.getTimestamp("fecha_creacion").toLocalDateTime());
-                carrito.setId(rs.getInt("id_carrito"));
-                return carrito;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Usuarios usuario = new Usuarios(
+                        rs.getString("usuario_nombre"),
+                        rs.getString("correo"),
+                        null, null, null
+                    );
+                    usuario.setId(rs.getInt("id_usuario"));
+                    
+                    EstadoCarrito estado = new EstadoCarrito(rs.getString("estado"));
+                    estado.setId(rs.getInt("id_estado"));
+                    
+                    carrito = new Carrito(usuario, estado, 
+                        rs.getTimestamp("fecha_creacion").toLocalDateTime());
+                    carrito.setId(rs.getInt("id_carrito"));
+                }
             }
         } catch (SQLException e) {
+            System.err.println("Error al obtener carrito activo: " + e.getMessage());
             e.printStackTrace();
         }
-        return null;
+        return carrito;
+    }
+
+    @Override
+    public List<Carrito> listarPorUsuario(int idUsuario) {
+        List<Carrito> lista = new ArrayList<>();
+        String sql = "SELECT c.*, u.nombre as usuario_nombre, u.correo, ec.estado " +
+                     "FROM carrito c " +
+                     "LEFT JOIN usuarios u ON c.id_usuario = u.id_usuario " +
+                     "LEFT JOIN estado_carrito ec ON c.id_estado = ec.id_estado_carrito " +
+                     "WHERE c.id_usuario=? ORDER BY c.fecha_creacion DESC";
+        try (Connection conn = Conexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idUsuario);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Usuarios usuario = new Usuarios(
+                        rs.getString("usuario_nombre"),
+                        rs.getString("correo"),
+                        null, null, null
+                    );
+                    usuario.setId(rs.getInt("id_usuario"));
+                    
+                    EstadoCarrito estado = new EstadoCarrito(rs.getString("estado"));
+                    estado.setId(rs.getInt("id_estado"));
+                    
+                    Carrito carrito = new Carrito(usuario, estado, 
+                        rs.getTimestamp("fecha_creacion").toLocalDateTime());
+                    carrito.setId(rs.getInt("id_carrito"));
+                    lista.add(carrito);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al listar carritos por usuario: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return lista;
     }
 }
-

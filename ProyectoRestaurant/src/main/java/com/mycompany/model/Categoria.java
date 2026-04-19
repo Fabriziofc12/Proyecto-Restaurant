@@ -6,7 +6,10 @@ public class Categoria {
     private String nombre;
 
     
-    public Categoria() {
+    public Categoria() { }
+
+    public Categoria(int id) {
+        this.id = id;
     }
 
     /**

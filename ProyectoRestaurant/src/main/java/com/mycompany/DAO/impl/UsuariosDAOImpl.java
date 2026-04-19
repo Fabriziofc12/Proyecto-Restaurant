@@ -1,20 +1,18 @@
 package com.mycompany.DAO.impl;
 
-import com.mycompany.config.Conexion;
-import com.mycompany.DAO.RolesDAO;
 import com.mycompany.DAO.UsuariosDAO;
-import com.mycompany.model.Roles;
 import com.mycompany.model.Usuarios;
-
+import com.mycompany.model.Roles;
+import com.mycompany.config.Conexion;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UsuariosDAOImpl implements UsuariosDAO{
-    private final RolesDAO rolesDAO = new RolesDAOImpl();
+public class UsuariosDAOImpl implements UsuariosDAO {
 
     @Override
     public int insertar(Usuarios usuario) {
+        int resultado = 0;
         String sql = "INSERT INTO usuarios (nombre, correo, telefono, contrasenia, id_rol) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -23,15 +21,17 @@ public class UsuariosDAOImpl implements UsuariosDAO{
             ps.setString(3, usuario.getTelefono());
             ps.setString(4, usuario.getContrasenia());
             ps.setInt(5, usuario.getRol().getId());
-            return ps.executeUpdate();
+            resultado = ps.executeUpdate();
         } catch (SQLException e) {
+            System.err.println("Error al insertar usuario: " + e.getMessage());
             e.printStackTrace();
-            return 0;
         }
+        return resultado;
     }
 
     @Override
     public int actualizar(Usuarios usuario) {
+        int resultado = 0;
         String sql = "UPDATE usuarios SET nombre=?, correo=?, telefono=?, contrasenia=?, id_rol=? WHERE id_usuario=?";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -41,63 +41,71 @@ public class UsuariosDAOImpl implements UsuariosDAO{
             ps.setString(4, usuario.getContrasenia());
             ps.setInt(5, usuario.getRol().getId());
             ps.setInt(6, usuario.getId());
-            return ps.executeUpdate();
+            resultado = ps.executeUpdate();
         } catch (SQLException e) {
+            System.err.println("Error al actualizar usuario: " + e.getMessage());
             e.printStackTrace();
-            return 0;
         }
+        return resultado;
     }
 
     @Override
     public int eliminar(int id) {
+        int resultado = 0;
         String sql = "DELETE FROM usuarios WHERE id_usuario=?";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
-            return ps.executeUpdate();
+            resultado = ps.executeUpdate();
         } catch (SQLException e) {
+            System.err.println("Error al eliminar usuario: " + e.getMessage());
             e.printStackTrace();
-            return 0;
         }
+        return resultado;
     }
 
     @Override
     public Usuarios obtenerPorId(int id) {
-        String sql = "SELECT u.*, r.rol as nombre_rol FROM usuarios u " +
-                     "JOIN roles r ON u.id_rol = r.id_rol WHERE u.id_usuario=?";
+        Usuarios usuario = null;
+        String sql = "SELECT u.*, r.rol FROM usuarios u " +
+                     "LEFT JOIN roles r ON u.id_rol = r.id_rol " +
+                     "WHERE u.id_usuario=?";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                Roles rol = new Roles(rs.getString("nombre_rol"));
-                rol.setId(rs.getInt("id_rol"));
-                
-                Usuarios usuario = new Usuarios(
-                    rs.getString("nombre"),
-                    rs.getString("correo"),
-                    rs.getString("telefono"),
-                    rs.getString("contrasenia"),
-                    rol
-                );
-                usuario.setId(rs.getInt("id_usuario"));
-                return usuario;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Roles rol = new Roles(rs.getString("rol"));
+                    rol.setId(rs.getInt("id_rol"));
+                    
+                    usuario = new Usuarios(
+                        rs.getString("nombre"),
+                        rs.getString("correo"),
+                        rs.getString("telefono"),
+                        rs.getString("contrasenia"),
+                        rol
+                    );
+                    usuario.setId(rs.getInt("id_usuario"));
+                }
             }
         } catch (SQLException e) {
+            System.err.println("Error al obtener usuario: " + e.getMessage());
             e.printStackTrace();
         }
-        return null;
+        return usuario;
     }
 
     @Override
     public List<Usuarios> listarTodos() {
         List<Usuarios> lista = new ArrayList<>();
-        String sql = "SELECT u.*, r.rol as nombre_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol";
+        String sql = "SELECT u.*, r.rol FROM usuarios u " +
+                     "LEFT JOIN roles r ON u.id_rol = r.id_rol " +
+                     "ORDER BY u.id_usuario";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                Roles rol = new Roles(rs.getString("nombre_rol"));
+                Roles rol = new Roles(rs.getString("rol"));
                 rol.setId(rs.getInt("id_rol"));
                 
                 Usuarios usuario = new Usuarios(
@@ -111,6 +119,7 @@ public class UsuariosDAOImpl implements UsuariosDAO{
                 lista.add(usuario);
             }
         } catch (SQLException e) {
+            System.err.println("Error al listar usuarios: " + e.getMessage());
             e.printStackTrace();
         }
         return lista;
@@ -118,58 +127,64 @@ public class UsuariosDAOImpl implements UsuariosDAO{
 
     @Override
     public Usuarios obtenerPorCorreo(String correo) {
-        String sql = "SELECT u.*, r.rol as nombre_rol FROM usuarios u " +
-                     "JOIN roles r ON u.id_rol = r.id_rol WHERE u.correo=?";
+        Usuarios usuario = null;
+        String sql = "SELECT u.*, r.rol FROM usuarios u " +
+                     "LEFT JOIN roles r ON u.id_rol = r.id_rol " +
+                     "WHERE u.correo=?";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, correo);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                Roles rol = new Roles(rs.getString("nombre_rol"));
-                rol.setId(rs.getInt("id_rol"));
-                
-                Usuarios usuario = new Usuarios(
-                    rs.getString("nombre"),
-                    rs.getString("correo"),
-                    rs.getString("telefono"),
-                    rs.getString("contrasenia"),
-                    rol
-                );
-                usuario.setId(rs.getInt("id_usuario"));
-                return usuario;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Roles rol = new Roles(rs.getString("rol"));
+                    rol.setId(rs.getInt("id_rol"));
+                    
+                    usuario = new Usuarios(
+                        rs.getString("nombre"),
+                        rs.getString("correo"),
+                        rs.getString("telefono"),
+                        rs.getString("contrasenia"),
+                        rol
+                    );
+                    usuario.setId(rs.getInt("id_usuario"));
+                }
             }
         } catch (SQLException e) {
+            System.err.println("Error al obtener usuario por correo: " + e.getMessage());
             e.printStackTrace();
         }
-        return null;
+        return usuario;
     }
 
     @Override
     public Usuarios autenticar(String correo, String contrasenia) {
-        String sql = "SELECT u.*, r.rol as nombre_rol FROM usuarios u " +
-                     "JOIN roles r ON u.id_rol = r.id_rol WHERE u.correo=? AND u.contrasenia=?";
+        Usuarios usuario = null;
+        String sql = "SELECT u.*, r.rol FROM usuarios u " +
+                     "LEFT JOIN roles r ON u.id_rol = r.id_rol " +
+                     "WHERE u.correo=? AND u.contrasenia=?";
         try (Connection conn = Conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, correo);
             ps.setString(2, contrasenia);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                Roles rol = new Roles(rs.getString("nombre_rol"));
-                rol.setId(rs.getInt("id_rol"));
-                
-                Usuarios usuario = new Usuarios(
-                    rs.getString("nombre"),
-                    rs.getString("correo"),
-                    rs.getString("telefono"),
-                    rs.getString("contrasenia"),
-                    rol
-                );
-                usuario.setId(rs.getInt("id_usuario"));
-                return usuario;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Roles rol = new Roles(rs.getString("rol"));
+                    rol.setId(rs.getInt("id_rol"));
+                    
+                    usuario = new Usuarios(
+                        rs.getString("nombre"),
+                        rs.getString("correo"),
+                        rs.getString("telefono"),
+                        rs.getString("contrasenia"),
+                        rol
+                    );
+                    usuario.setId(rs.getInt("id_usuario"));
+                }
             }
         } catch (SQLException e) {
+            System.err.println("Error al autenticar usuario: " + e.getMessage());
             e.printStackTrace();
         }
-        return null;
+        return usuario;
     }
 }

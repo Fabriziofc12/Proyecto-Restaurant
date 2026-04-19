@@ -76,6 +76,28 @@ public class DireccionesDAOImpl implements DireccionesDAO {
         }
         return null;
     }
+    
+    @Override
+    public List<Direcciones> listarTodos() {
+        List<Direcciones> lista = new ArrayList<>();
+        String sql = "SELECT * FROM direcciones ORDER BY id_direccion";
+        try (Connection conn = Conexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Usuarios usuario = new Usuarios(null, null, null, null, null);
+                usuario.setId(rs.getInt("id_usuario"));
+                
+                Direcciones direccion = new Direcciones(usuario,
+                    rs.getString("direccion"), rs.getBoolean("principal"));
+                direccion.setId(rs.getInt("id_direccion"));
+                lista.add(direccion);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
 
     @Override
     public List<Direcciones> listarPorUsuario(int idUsuario) {
